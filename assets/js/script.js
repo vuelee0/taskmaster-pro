@@ -4,7 +4,7 @@ var createTask = function(taskText, taskDate, taskList) {
   // create elements that make up a task item
   var taskLi = $("<li>").addClass("list-group-item");
   var taskSpan = $("<span>")
-    .addClass("badge badge-primary badge-pill")
+    .addClass("badge badge-save badge-pill")
     .text(taskDate);
   var taskP = $("<p>")
     .addClass("m-1")
@@ -19,6 +19,8 @@ var createTask = function(taskText, taskDate, taskList) {
   // append to ul list on the page
   $("#list-" + taskList).append(taskLi);
 };
+
+
 
 var loadTasks = function() {
   tasks = JSON.parse(localStorage.getItem("tasks"));
@@ -42,11 +44,16 @@ var loadTasks = function() {
   });
 };
 
+
+
 var saveTasks = function() {
   localStorage.setItem("tasks", JSON.stringify(tasks));
 };
 
+
+
 var auditTask = function(taskEl) {
+  console.log(taskEl);
 
   // get date from task element
   var date = $(taskEl)
@@ -73,6 +80,8 @@ var auditTask = function(taskEl) {
   }
 };
 
+
+
 // enable draggable/sortable feature on list-group elements
 $(".card .list-group").sortable({
   // enable dragging across lists
@@ -81,16 +90,18 @@ $(".card .list-group").sortable({
   tolerance: "pointer",
   helper: "clone",
   activate: function(event, ui) {
-    console.log(ui);
+    $(this).addClass("dropover");
+    $(".bottom-trash").addClass("bottom-trash-drag");
   },
   deactivate: function(event, ui) {
-    console.log(ui);
+    $(this).removeClass("dropover");
+    $(".bottom-trash").removeClass(".bottom-trash-drag");
   },
   over: function(event) {
-    console.log(event);
+    $(event.target).addClass("dropover-active");
   },
   out: function(event) {
-    console.log(event);
+    $(event.target).removeClass("dropover-active");
   },
   update: function() {
     var tempArr = [];
@@ -126,6 +137,8 @@ $(".card .list-group").sortable({
   }
 });
 
+
+
 // trash icon can be dropped onto
 $("#trash").droppable({
   accept: ".card .list-group-item",
@@ -133,14 +146,17 @@ $("#trash").droppable({
   drop: function(event, ui) {
     // remove dragged element from the dom
     ui.draggable.remove();
+    $(".bottom-trash").removeClass("bottom-trash-drag");
   },
   over: function(event, ui) {
-    console.log(ui);
+    $(".bottom-trash").addClass("bottom-trash-drag");
   },
   out: function(event, ui) {
-    console.log(ui);
+    $(".bottom-trash").removeClass("bottom-trash-drag");
   }
 });
+
+
 
 // convert text field into a jquery date picker
 $("#modalDueDate").datepicker({
@@ -148,11 +164,15 @@ $("#modalDueDate").datepicker({
   minDate: 1
 });
 
+
+
 // modal was triggered
 $("#task-form-modal").on("show.bs.modal", function() {
   // clear values
   $("#modalTaskDescription, #modalDueDate").val("");
 });
+
+
 
 // modal is fully visible
 $("#task-form-modal").on("shown.bs.modal", function() {
@@ -160,8 +180,10 @@ $("#task-form-modal").on("shown.bs.modal", function() {
   $("#modalTaskDescription").trigger("focus");
 });
 
+
+
 // save button in modal was clicked
-$("#task-form-modal .btn-primary").click(function() {
+$("#task-form-modal .btn-save").click(function() {
   // get form values
   var taskText = $("#modalTaskDescription").val();
   var taskDate = $("#modalDueDate").val();
@@ -182,6 +204,8 @@ $("#task-form-modal .btn-primary").click(function() {
   }
 });
 
+
+
 // task text was clicked
 $(".list-group").on("click", "p", function() {
   // get current text of p element
@@ -196,6 +220,8 @@ $(".list-group").on("click", "p", function() {
   // auto focus new element
   textInput.trigger("focus");
 });
+
+
 
 // editable field was un-focused
 $(".list-group").on("blur", "textarea", function() {
@@ -224,6 +250,8 @@ $(".list-group").on("blur", "textarea", function() {
   $(this).replaceWith(taskP);
 });
 
+
+
 // due date was clicked
 $(".list-group").on("click", "span", function() {
   // get current text
@@ -251,6 +279,8 @@ $(".list-group").on("click", "span", function() {
   dateInput.trigger("focus");
 });
 
+
+
 // value of due date was changed
 $(".list-group").on("change", "input[type='text']", function() {
   var date = $(this).val();
@@ -270,11 +300,13 @@ $(".list-group").on("change", "input[type='text']", function() {
 
   // recreate span and insert in place of input element
   var taskSpan = $("<span>")
-    .addClass("badge badge-primary badge-pill")
+    .addClass("badge badge-save badge-pill")
     .text(date);
     $(this).replaceWith(taskSpan);
     auditTask($(taskSpan).closest(".list-group-item"));
 });
+
+
 
 // remove all tasks
 $("#remove-tasks").on("click", function() {
@@ -286,5 +318,15 @@ $("#remove-tasks").on("click", function() {
   saveTasks();
 });
 
+
+
 // load tasks for the first time
 loadTasks();
+
+
+
+setInterval(function () {
+  $(".card .list-group-item").each(function() {
+    auditTask(this);
+  });
+}, 1800000);
